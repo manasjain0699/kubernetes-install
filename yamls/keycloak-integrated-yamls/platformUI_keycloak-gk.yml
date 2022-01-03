@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nodelog-admin
+  namespace: application
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: roles-for-nodelog
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: roles-for-nodelog-rb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: roles-for-nodelog
+subjects:
+- kind: ServiceAccount
+  name: nodelog-admin
+  namespace: application
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodelog-deploy
+  namespace: change-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      type: nodelog
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        type: nodelog
+      name: nodelog
+    spec:
+      containers:
+      - args:
+        - --ssl-insecure-skip-verify=true
+        - --set-authorization-header=true
+        - --show-debug-on-error=true
+        - --skip-provider-button=true
+        - --provider=keycloak
+        - --client-id=myapp
+        - --scope=group_scope 
+        - --client-secret=change-client-secret
+        - --login-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/auth
+        - --redeem-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/token
+        - --profile-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/userinfo
+        - --validate-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/userinfo
+        - --upstream=http://localhost:8000/
+        - --cookie-secure=true
+        - --cookie-expire=168h0m
+        - --cookie-refresh=60m
+        - --cookie-secret=L1BibFNSaTFDRGdYbkwxcDM0dW5Vdz09
+        - --cookie-domain=change-external-ip
+        - --http-address=0.0.0.0:4180
+        - --redirect-url=https://change-external-ip/oauth2/callback
+        - --email-domain=*
+        # - --keycloak-group=allusers
+        - --oidc-email-claim=sub
+        image: katonic/oauth2-proxy:v1
+        imagePullPolicy: IfNotPresent
+        name: oauth2-con
+        ports:
+        - containerPort: 4180
+      - image: change-platform-image-name
+        imagePullPolicy: IfNotPresent
+        name: nodelog-con
+        ports:
+        - containerPort: 8000
+          protocol: TCP
+        resources: {}
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: docker-hub-secret
+      restartPolicy: Always
+      serviceAccount: nodelog-admin
+      serviceAccountName: nodelog-admin
+      schedulerName: default-scheduler
+      securityContext: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: change-platform-ui-servicename
+  namespace: change-namespace
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 4180
+  selector:
+    type: nodelog
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: change-platform-ui-servicename-vs
+  namespace: change-namespace
+spec:
+  gateways:
+  - kubeflow/kubeflow-gateway
+  hosts:
+  - change-external-ip
+  http:
+  - match:
+    - uri:
+        prefix: /
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        host: change-platform-ui-servicename.change-namespace.svc.cluster.local
+        port:
+          number: 80

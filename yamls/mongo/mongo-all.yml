@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: application
+  labels:
+    name: mongo
+spec:
+  ports:
+  - port: 27017
+    targetPort: 27017
+  clusterIP: None
+  selector:
+    role: mongo
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo
+  namespace: application
+spec:
+  selector:
+    matchLabels:
+      role: mongo
+  serviceName: "mongodb"
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        role: mongo
+        environment: test
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: mongo
+          image: katonic/mongodb:v1.0
+          command:
+            - mongod
+            - "--replSet"
+            - rs0
+            - "--bind_ip"
+            - 0.0.0.0
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongo-persistent-storage
+              mountPath: /data/db
+        - name: mongo-sidecar
+          image: katonic/mongo-sidecar:0.1
+          env:
+            - name: MONGO_SIDECAR_POD_LABELS
+              value: "role=mongo,environment=test"
+            - name: KUBE_NAMESPACE
+              value: "application"
+            - name: KUBERNETES_MONGO_SERVICE_NAME
+              value: "mongodb"
+      imagePullSecrets:
+      - name: docker-hub-secret
+      serviceAccountName: mongo-sa
+  volumeClaimTemplates:
+  - metadata:
+      name: mongo-persistent-storage
+    spec:
+      storageClassName: default
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: rbac.authorization.k8s.io/v1 
+kind: ClusterRole 
+metadata: 
+  name: sidecar-roles 
+rules:
+- apiGroups: ["*"]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding 
+metadata:
+  name: sidecar-rolebinding 
+subjects:
+- kind: ServiceAccount
+  name: mongo-sa
+  namespace: application
+roleRef:
+  kind: ClusterRole 
+  name: sidecar-roles
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1 
+kind: ServiceAccount
+metadata:
+  name: mongo-sa
+  namespace: application

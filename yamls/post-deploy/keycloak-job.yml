@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: setting-up-kcrealm
+  namespace: keycloak
+spec:
+  template:
+    spec:
+      serviceAccountName: cronjob
+      containers:
+      - name: kcrealm
+        image: change-to-keycloak-script-image
+        command: ["realm-setup.sh"]
+      restartPolicy: Never
+      imagePullSecrets:
+       - name: docker-hub-secret
+  backoffLimit: 4

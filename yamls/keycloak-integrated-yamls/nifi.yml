@@ -1,0 +1,112 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: nifi
+spec: {}
+status: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  creationTimestamp: null
+  name: nifi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: nifi
+  name: nifi
+  namespace: nifi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nifi
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: nifi
+    spec:
+      containers:
+      - args:
+        - --ssl-insecure-skip-verify=true
+        - --set-authorization-header=true
+        - --show-debug-on-error=true
+        - --skip-provider-button=true
+        - --provider=keycloak
+        - --client-id=myapp
+        - --scope=group_scope
+        - --client-secret=change-client-secret
+        - --login-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/auth
+        - --redeem-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/token
+        - --profile-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/userinfo
+        - --validate-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/userinfo
+        - --upstream=http://localhost:8080/
+        - --cookie-secure=true
+        - --cookie-expire=168h0m
+        - --cookie-refresh=60m
+        - --cookie-secret=L1BibFNSaTFDRGdYbkwxcDM0dW5Vdz09
+        - --cookie-domain=change-external-ip
+        - --http-address=0.0.0.0:4180
+        - --redirect-url=https://change-external-ip/oauth2/callback
+        - --email-domain=*
+        # - --keycloak-group=allusers
+        - --oidc-email-claim=sub
+        image: katonic/oauth2-proxy:v1
+        imagePullPolicy: IfNotPresent
+        name: oauth2-con
+        ports:
+        - containerPort: 4180
+          protocol: TCP
+      - image: change-nifi-image-name
+        name: nifi
+        resources: {}
+        ports:
+         - containerPort: 8080
+           protocol: TCP
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: nifi
+  name: nifi
+  namespace: nifi
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 4180
+  selector:
+    app: nifi
+status:
+  loadBalancer: {}
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: nifi-vs
+  namespace: nifi
+spec:
+  gateways:
+  - kubeflow/kubeflow-gateway
+  hosts:
+  - change-external-ip
+  http:
+  - match:
+    - uri:
+        prefix: /nifi
+    rewrite:
+      uri: /nifi
+    route:
+    - destination:
+        host: nifi.nifi.svc.cluster.local
+        port:
+          number: 8080

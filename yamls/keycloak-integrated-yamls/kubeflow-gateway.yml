@@ -1,0 +1,33 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: kubeflow-gateway
+  namespace: kubeflow
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - hosts:
+    - change-external-ip
+    port:
+      name: https
+      number: 443 
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      serverCertificate: /etc/istio/ingressgateway-certs/tls.crt
+      privateKey: /etc/istio/ingressgateway-certs/tls.key
+  - hosts:
+    - change-external-ip
+    port:
+      name: http
+      number: 80
+      protocol: HTTP
+    tls: 
+      httpsRedirect: true
+    
+    
+  
+  
+
+

@@ -1,0 +1,152 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations: {}
+  labels:
+    app: ml-pipeline-ui
+    application-crd-id: kubeflow-pipelines
+  name: ml-pipeline-ui
+  namespace: kubeflow
+spec:
+  selector:
+    matchLabels:
+      app: ml-pipeline-ui
+      application-crd-id: kubeflow-pipelines
+  template:
+    metadata:
+      labels:
+        app: ml-pipeline-ui
+        application-crd-id: kubeflow-pipelines
+    spec:
+      containers:
+      - args:
+        - --ssl-insecure-skip-verify=true
+        - --set-authorization-header=true
+        - --show-debug-on-error=true
+        - --skip-provider-button=true
+        - --provider=keycloak
+        - --client-id=myapp
+        - --scope=group_scope 
+        - --client-secret=change-client-secret
+        - --login-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/auth
+        - --redeem-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/token
+        - --profile-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/userinfo
+        - --validate-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/userinfo
+        - --upstream=http://localhost:3005/
+        - --cookie-secure=true
+        - --cookie-expire=168h0m
+        - --cookie-refresh=60m
+        - --cookie-secret=L1BibFNSaTFDRGdYbkwxcDM0dW5Vdz09
+        - --cookie-domain=change-external-ip
+        - --http-address=0.0.0.0:4180
+        - --redirect-url=https://change-external-ip/oauth2/callback
+        - --email-domain=*
+        # - --keycloak-group=allusers
+        - --oidc-email-claim=sub
+        image: katonic/oauth2-proxy:v1
+        imagePullPolicy: IfNotPresent
+        name: oauth2-con
+        ports:
+        - containerPort: 4180 
+      - env:
+        - name: VIEWER_TENSORBOARD_POD_TEMPLATE_SPEC_PATH
+          value: "/etc/config/viewer-pod-template.json"
+        - name: MINIO_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: accesskey
+              name: mlpipeline-minio-artifact
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: secretkey
+              name: mlpipeline-minio-artifact
+        - name: ALLOW_CUSTOM_VISUALIZATIONS
+          value: 'true'
+        image: change-pipeline-image-name
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - wget
+            - "-q"
+            - "-S"
+            - "-O"
+            - "-"
+            - http://localhost:3005/apis/v1beta1/healthz
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          timeoutSeconds: 2
+        name: ml-pipeline-ui
+        ports:
+        - containerPort: 3005
+        readinessProbe:
+          exec:
+            command:
+            - wget
+            - "-q"
+            - "-S"
+            - "-O"
+            - "-"
+            - http://localhost:3005/apis/v1beta1/healthz
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          timeoutSeconds: 2
+        volumeMounts:
+        - mountPath: "/etc/config"
+          name: config-volume
+          readOnly: true
+
+
+      serviceAccountName: ml-pipeline-ui
+      volumes:
+      - configMap:
+          name: ml-pipeline-ui-configmap
+        name: config-volume
+      
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {}
+  labels:
+    app: ml-pipeline-ui
+    application-crd-id: kubeflow-pipelines
+  name: ml-pipeline-ui
+  namespace: kubeflow
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 4180
+  selector:
+    app: ml-pipeline-ui
+    application-crd-id: kubeflow-pipelines
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+ name: pipeline-vs
+ namespace: kubeflow
+spec:
+  gateways:
+  - kubeflow/kubeflow-gateway
+  hosts:
+  - change-external-ip
+  http:
+  - match:
+    - uri:
+        prefix: /pipeline
+    rewrite:
+      uri: /pipeline
+    route:
+    - destination:
+        host: ml-pipeline-ui.kubeflow.svc.cluster.local
+        port:
+          number: 80

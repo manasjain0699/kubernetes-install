@@ -1,0 +1,20 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+allowVolumeExpansion: true
+metadata:
+  creationTimestamp: "2021-10-13T06:04:08Z"
+  name: kfs
+mountOptions:
+- dir_mode=0777
+- file_mode=0777
+- uid=0
+- gid=0
+- mfsymlinks
+- cache=strict
+- actimeo=30
+parameters:
+  shareName: kfs-file-share
+  skuName: Standard_LRS
+provisioner: kubernetes.io/azure-file
+reclaimPolicy: Retain
+volumeBindingMode: Immediate

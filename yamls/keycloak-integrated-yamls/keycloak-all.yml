@@ -1,0 +1,227 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: keycloak
+---
+apiVersion: v1
+data:
+  ADMIN_PASSWORD: YWRtaW4K
+  ADMIN_USERNAME: YWRtaW4K
+kind: Secret
+metadata:
+  labels:
+    app: keycloak
+    keycloak: keycloak
+  name: credential-keycloak
+  namespace: keycloak
+type: Opaque
+---
+apiVersion: v1
+data:
+  POSTGRES_DATABASE: cm9vdAo=
+  POSTGRES_HOST: a2V5Y2xvYWstcG9zdGdyZXNxbAo=
+  POSTGRES_PASSWORD: UyR2TTJ8YD4lOFdIcU5jfgo=
+  POSTGRES_USERNAME: a2F0b25pYwo=
+  POSTGRES_VERSION: MTAK
+kind: Secret
+metadata:
+  labels:
+    app: keycloak
+  name: keycloak-db-secret
+  namespace: keycloak
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: keycloak
+  name: keycloak-postgresql
+  namespace: keycloak
+spec:
+  ports:
+  - port: 5432
+    protocol: TCP
+    targetPort: 5432
+  selector:
+    app: keycloak
+    component: database
+  clusterIP: None 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: keycloak
+  name: keycloak-svc
+  namespace: keycloak
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+  selector:
+    app: keycloak
+    type: frontend
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: keycloak
+    type: frontend
+  name: keycloak
+  namespace: keycloak
+spec:
+  serviceName: keycloak-svc
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+      type: frontend
+  template:
+    metadata:
+      labels:
+        app: keycloak
+        type: frontend
+    spec:
+      containers:
+      - env:
+        - name: DB_VENDOR
+          value: POSTGRES
+        - name: DB_SCHEMA
+          value: public
+        - name: DB_ADDR
+          value: keycloak-postgresql
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_DATABASE
+          value: root
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_USERNAME
+              name: keycloak-db-secret
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_PASSWORD
+              name: keycloak-db-secret
+        - name: KEYCLOAK_USER
+          value: admin
+        - name: KEYCLOAK_PASSWORD
+          value: gai0EifaiVe9itautry
+        - name: CACHE_OWNERS_COUNT
+          value: "2"
+        - name: CACHE_OWNERS_AUTH_SESSIONS_COUNT
+          value: "2"
+        - name: PROXY_ADDRESS_FORWARDING
+          value: "true"
+        - name: KEYCLOAK_STATISTICS
+          value: all
+        image: change-keycloak-image-name
+        name: keycloak
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 8443
+          name: https
+        readinessProbe:
+          httpGet:
+            path: /auth/realms/master
+            port: 8080
+      imagePullSecrets:
+      - name: docker-hub-secret
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: keycloak
+    component: database
+  name: keycloak-postgresql
+  namespace: keycloak
+spec:
+  serviceName: keycloak-postgresql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+      component: database
+  template:
+    metadata:
+      labels:
+        app: keycloak
+        component: database
+      name: keycloak-postgresql
+    spec:
+      containers:
+      - env:
+        - name: POSTGRESQL_USER
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_USERNAME
+              name: keycloak-db-secret
+        - name: POSTGRESQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_PASSWORD
+              name: keycloak-db-secret
+        - name: POSTGRESQL_DATABASE
+          value: root
+        image: katonic/keycloak-postgres:0.1
+        imagePullPolicy: IfNotPresent
+        name: keycloak-postgresql
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /var/lib/pgsql/data
+          name: keycloak-postgresql-claim
+      imagePullSecrets:
+      - name: docker-hub-secret
+      initContainers:
+      - command:
+        - sh
+        - -c
+        - chown -R postgres:postgres /var/lib/pgsql/data
+        image: katonic/keycloak-postgres:0.1
+        imagePullPolicy: IfNotPresent
+        name: init-pvc
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+        - mountPath: /var/lib/pgsql/data
+          name: keycloak-postgresql-claim
+  volumeClaimTemplates:
+  - metadata:
+      name: keycloak-postgresql-claim
+    spec:
+      accessModes: 
+      - ReadWriteOnce
+      storageClassName: default
+      resources:
+        requests:
+          storage: 1Gi
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: my-vs-keycloak
+  namespace: keycloak
+spec:
+  gateways:
+  - kubeflow/kubeflow-gateway
+  hosts:
+  - change-external-ip
+  http:
+  - match:
+    - uri:
+        prefix: /auth
+    route:
+    - destination:
+        host: keycloak-svc.keycloak.svc.cluster.local
+        port:
+          number: 80

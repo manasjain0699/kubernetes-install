@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: minio
+    role: server
+  name: minio-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+      role: server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: minio
+        role: server
+    spec:
+      containers:
+      - args:
+        - server
+        - /data{1...4}
+        - --console-address
+        - :9001
+        env:
+        - name: MINIO_IDENTITY_OPENID_CONFIG_URL
+          value: https://change-domain-name/auth/realms/katonic/.well-known/openid-configuration
+        - name: MINIO_IDENTITY_OPENID_CLIENT_ID
+          value: myapp
+        - name: MINIO_ROOT_USER
+          value: minio
+        - name: MINIO_IDENTITY_OPENID_CLIENT_SECRET
+          value: change-client-secret
+        - name: MINIO_ROOT_PASSWORD
+          value: QueiGh1ahthaT2Lu
+        - name: MINIO_SERVER_URL
+          value: http://127.0.0.1:9000/
+        image: change-image-name
+        imagePullPolicy: IfNotPresent
+        name: minio-server
+        ports:
+        - containerPort: 9000
+          name: minio-svc
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 20m
+            memory: 100Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /data1
+          name: data1
+        - mountPath: /data2
+          name: data2
+        - mountPath: /data3
+          name: data3
+        - mountPath: /data4
+          name: data4
+        - mountPath: "/root/.minio/certs/CAs/"
+          name: minio-certs
+          readOnly: true 
+        - mountPath: "/root/.mc/certs/CAs/"
+          name: mc-certs
+          readOnly: true  
+      imagePullSecrets:
+        - name: docker-hub-secret
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: data1
+        persistentVolumeClaim:
+          claimName: minio-data-1
+      - name: data2
+        persistentVolumeClaim:
+          claimName: minio-data-2
+      - name: data3
+        persistentVolumeClaim:
+          claimName: minio-data-3
+      - name: data4
+        persistentVolumeClaim:
+          claimName: minio-data-4
+      - name: minio-certs 
+        secret: 
+          secretName: minio-certs
+      - name: mc-certs 
+        secret: 
+          secretName: mc-certs
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-server
+  labels:
+    app: minio
+    role: server
+spec:
+  selector:
+    app: minio
+    role: server
+  type: ClusterIP
+  ports:
+   - port: 9000
+     targetPort: 9000
+     name: minio-svc
+
