@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ml-pipeline-ui
+  name: ml-pipeline-ui
+spec:
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 4180
+  selector:
+    app: ml-pipeline-ui
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+ name: pipeline-vs
+ namespace: kubeflow
+spec:
+  gateways:
+  - kubeflow/kubeflow-gateway
+  hosts:
+  - change-external-ip
+  http:
+  - match:
+    - uri:
+        prefix: /pipeline
+    rewrite:
+      uri: /pipeline
+    route:
+    - destination:
+        host: ml-pipeline-ui.kubeflow.svc.cluster.local
+        port:
+          number: 80
+

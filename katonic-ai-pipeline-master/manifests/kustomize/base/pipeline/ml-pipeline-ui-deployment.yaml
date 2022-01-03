@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ml-pipeline-ui
+  name: ml-pipeline-ui
+spec:
+  selector:
+    matchLabels:
+      app: ml-pipeline-ui
+  template:
+    metadata:
+      labels:
+        app: ml-pipeline-ui
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+    spec:
+      volumes:
+      - name: config-volume
+        configMap:
+          name: ml-pipeline-ui-configmap
+      containers:
+      - args:
+        - --ssl-insecure-skip-verify=true
+        - --set-authorization-header=true 
+        - --show-debug-on-error=true
+        - --skip-provider-button=true
+        - --provider=keycloak
+        - --client-id=myapp
+        - --scope=group_scope
+        - --client-secret=change-client-secret
+        - --login-url=https://change-external-ip/auth/realms/katonic/protocol/openid-connect/auth
+        - --redeem-url=https://change-external-ip/auth/realms/katonic/protocol/openid-connect/token
+        - --profile-url=https://change-external-ip/auth/realms/katonic/protocol/openid-connect/userinfo
+        - --validate-url=https://change-external-ip/auth/realms/katonic/protocol/openid-connect/userinfo
+        - --upstream=http://localhost:3005/
+        - --cookie-secure=true
+        - --cookie-expire=168h0m
+        - --cookie-refresh=60m
+        - --cookie-secret=L1BibFNSaTFDRGdYbkwxcDM0dW5Vdz09
+        - --cookie-domain=test.katonic.ai
+        - --http-address=0.0.0.0:4180
+        - --redirect-url=https://change-external-ip/oauth2/callback
+        - --email-domain=*
+        - --oidc-email-claim=sub
+        - --keycloak-group=allusers
+        image: katonic/oauth2-proxy:v1
+        imagePullPolicy: IfNotPresent
+        name: oauth2-con
+        ports:
+        - containerPort: 4180
+          protocol: TCP
+
+      - image: change-pipeline-image-name
+        imagePullPolicy: IfNotPresent
+        name: ml-pipeline-ui
+        ports:
+        - containerPort: 3005
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+          readOnly: true
+        env:
+          - name: VIEWER_TENSORBOARD_POD_TEMPLATE_SPEC_PATH
+            value: /etc/config/viewer-pod-template.json
+          - name: MINIO_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: MINIO_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: mlpipeline-minio-artifact
+                key: accesskey
+          - name: MINIO_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: mlpipeline-minio-artifact
+                key: secretkey
+          - name: ALLOW_CUSTOM_VISUALIZATIONS
+            value: "true"
+        readinessProbe:
+          exec:
+            command:
+              - wget
+              - -q # quiet
+              - -S # show server response
+              - -O
+              - "-" # Redirect output to stdout
+              - http://localhost:3005/apis/v1beta1/healthz
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          timeoutSeconds: 2
+        livenessProbe:
+          exec:
+            command:
+              - wget
+              - -q # quiet
+              - -S # show server response
+              - -O
+              - "-" # Redirect output to stdout
+              - http://localhost:3005/apis/v1beta1/healthz
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          timeoutSeconds: 2
+        resources:
+          requests:
+            cpu: 10m
+            memory: 70Mi
+      serviceAccountName: ml-pipeline-ui
+      imagePullSecrets:
+         - name: docker-hub-secret
