@@ -29,3 +29,5 @@ sudo apt-mark hold kubelet kubeadm kubectl
 ---
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.11.0/manifests/namespace.yaml
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.11.0/manifests/metallb.yaml
+
+kubectl create secret docker-registry docker-hub-secret  -n keycloak --docker-server=https://index.docker.io/v2/ --docker-username=katonic --docker-password=4049b650-86c8-4df5-b8ac-c75c6155b8ba
