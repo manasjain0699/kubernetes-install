@@ -27,18 +27,18 @@ spec:
         - :9001
         env:
         - name: MINIO_IDENTITY_OPENID_CONFIG_URL
-          value: https://change-domain-name/auth/realms/katonic/.well-known/openid-configuration
+          value: https://torrent.katonic.ai/auth/realms/katonic/.well-known/openid-configuration
         - name: MINIO_IDENTITY_OPENID_CLIENT_ID
           value: myapp
         - name: MINIO_ROOT_USER
           value: minio
         - name: MINIO_IDENTITY_OPENID_CLIENT_SECRET
-          value: change-client-secret
+          value: c8b01721-ebee-4d33-8072-861f53166a34
         - name: MINIO_ROOT_PASSWORD
           value: QueiGh1ahthaT2Lu
         - name: MINIO_SERVER_URL
           value: http://127.0.0.1:9000/
-        image: change-image-name
+        image: katonic/custom-minio-console:0.4
         imagePullPolicy: IfNotPresent
         name: minio-server
         ports:

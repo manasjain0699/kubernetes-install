@@ -8,7 +8,7 @@ spec:
     istio: ingressgateway
   servers:
   - hosts:
-    - change-external-ip
+    - torrent.katonic.ai
     port:
       name: https
       number: 443 
@@ -18,7 +18,7 @@ spec:
       serverCertificate: /etc/istio/ingressgateway-certs/tls.crt
       privateKey: /etc/istio/ingressgateway-certs/tls.key
   - hosts:
-    - change-external-ip
+    - torrent.katonic.ai
     port:
       name: http
       number: 80

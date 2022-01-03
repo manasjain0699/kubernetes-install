@@ -934,7 +934,7 @@ spec:
   gateways:
   - kubeflow/kubeflow-gateway
   hosts:
-  - change-external-ip
+  - torrent.katonic.ai
   http:
   - match:
     - uri:

@@ -6,13 +6,13 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "change-client-secret",
+      "secret": "c8b01721-ebee-4d33-8072-861f53166a34",
       "redirectUris": [
-        "http://change-external-ip/grafana/*",
-        "http://change-external-ip/lab/*",
-        "http://change-external-ip/katib/*",
-        "http://change-external-ip/*",
-        "http://change-external-ip/pipeline*"
+        "http://torrent.katonic.ai/grafana/*",
+        "http://torrent.katonic.ai/lab/*",
+        "http://torrent.katonic.ai/katib/*",
+        "http://torrent.katonic.ai/*",
+        "http://torrent.katonic.ai/pipeline*"
       ],
       "webOrigins": [],
       "notBefore": 0,

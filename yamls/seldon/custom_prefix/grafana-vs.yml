@@ -5,7 +5,7 @@ metadata:
   namespace: seldon-system
 spec:
   hosts:
-  - "change-external-ip"
+  - "torrent.katonic.ai"
   gateways:
   - kubeflow/kubeflow-gateway
   http:

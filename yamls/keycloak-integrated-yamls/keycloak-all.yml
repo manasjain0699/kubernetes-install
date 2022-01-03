@@ -120,7 +120,7 @@ spec:
           value: "true"
         - name: KEYCLOAK_STATISTICS
           value: all
-        image: change-keycloak-image-name
+        image: katonic/keycloak:v4.2
         name: keycloak
         ports:
         - containerPort: 8080
@@ -215,7 +215,7 @@ spec:
   gateways:
   - kubeflow/kubeflow-gateway
   hosts:
-  - change-external-ip
+  - torrent.katonic.ai
   http:
   - match:
     - uri:

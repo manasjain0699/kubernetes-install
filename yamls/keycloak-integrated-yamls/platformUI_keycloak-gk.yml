@@ -33,7 +33,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nodelog-deploy
-  namespace: change-namespace
+  namespace: application
 spec:
   replicas: 1
   selector:
@@ -59,19 +59,19 @@ spec:
         - --provider=keycloak
         - --client-id=myapp
         - --scope=group_scope 
-        - --client-secret=change-client-secret
-        - --login-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/auth
-        - --redeem-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/token
-        - --profile-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/userinfo
-        - --validate-url=https://change-external-ip/auth/realms/realm-name-here/protocol/openid-connect/userinfo
+        - --client-secret=c8b01721-ebee-4d33-8072-861f53166a34
+        - --login-url=https://torrent.katonic.ai/auth/realms/katonic/protocol/openid-connect/auth
+        - --redeem-url=https://torrent.katonic.ai/auth/realms/katonic/protocol/openid-connect/token
+        - --profile-url=https://torrent.katonic.ai/auth/realms/katonic/protocol/openid-connect/userinfo
+        - --validate-url=https://torrent.katonic.ai/auth/realms/katonic/protocol/openid-connect/userinfo
         - --upstream=http://localhost:8000/
         - --cookie-secure=true
         - --cookie-expire=168h0m
         - --cookie-refresh=60m
         - --cookie-secret=L1BibFNSaTFDRGdYbkwxcDM0dW5Vdz09
-        - --cookie-domain=change-external-ip
+        - --cookie-domain=torrent.katonic.ai
         - --http-address=0.0.0.0:4180
-        - --redirect-url=https://change-external-ip/oauth2/callback
+        - --redirect-url=https://torrent.katonic.ai/oauth2/callback
         - --email-domain=*
         # - --keycloak-group=allusers
         - --oidc-email-claim=sub
@@ -80,7 +80,7 @@ spec:
         name: oauth2-con
         ports:
         - containerPort: 4180
-      - image: change-platform-image-name
+      - image: katonic/katonic-mlops-enterprise:2.1
         imagePullPolicy: IfNotPresent
         name: nodelog-con
         ports:
@@ -101,8 +101,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: change-platform-ui-servicename
-  namespace: change-namespace
+  name: platformuisvc
+  namespace: application
 spec:
   ports:
   - port: 80
@@ -118,13 +118,13 @@ status:
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: change-platform-ui-servicename-vs
-  namespace: change-namespace
+  name: platformuisvc-vs
+  namespace: application
 spec:
   gateways:
   - kubeflow/kubeflow-gateway
   hosts:
-  - change-external-ip
+  - torrent.katonic.ai
   http:
   - match:
     - uri:
@@ -133,6 +133,6 @@ spec:
       uri: /
     route:
     - destination:
-        host: change-platform-ui-servicename.change-namespace.svc.cluster.local
+        host: platformuisvc.application.svc.cluster.local
         port:
           number: 80

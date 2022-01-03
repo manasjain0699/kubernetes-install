@@ -7,7 +7,7 @@ spec:
   gateways:
   - kubeflow/kubeflow-gateway
   hosts:
-  - change-domain-name
+  - torrent.katonic.ai
   http:
   - match:
     - uri:

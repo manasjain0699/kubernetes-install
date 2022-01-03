@@ -9,7 +9,7 @@ spec:
       serviceAccountName: cronjob
       containers:
       - name: kcrealm
-        image: change-to-keycloak-script-image
+        image: katonic/nb-isolation:optimistic-1.3-with-minio-try
         command: ["realm-setup.sh"]
       restartPolicy: Never
       imagePullSecrets:

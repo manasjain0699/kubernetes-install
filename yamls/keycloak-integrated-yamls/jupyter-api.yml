@@ -64,7 +64,7 @@ spec:
         app: jupyter-api
     spec:
       containers:
-      - image: change-jupyter-api-image-name
+      - image: katonic/service-api:latest
         imagePullPolicy: IfNotPresent
         name: jupter-notebook-apis
       imagePullSecrets:
