@@ -1,3 +1,6 @@
+#Gateway
+kubectl create secret -n istio-system tls istio-ingressgateway-certs --key certs/tls.key --cert certs/tls.crt
+#Seldon
 helm install seldon-core seldon-core-operator --repo https://storage.googleapis.com/seldon-charts --set usageMetrics.enabled=true --set istio.gateway=kubeflow/kubeflow-gateway --namespace seldon-system --set istio.enabled=true
 kubectl create configmap -n seldon-system model-usage-rules --from-file=yamls/seldon/model-usage.rules.yml --dry-run=server -o yaml | kubectl apply -f -
 helm upgrade seldon-core-analytics seldonio/seldon-core-analytics --version 1.4.0 --namespace seldon-system --install -f yamls/seldon/analytics-values.yml
