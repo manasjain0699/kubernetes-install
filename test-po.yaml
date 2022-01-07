@@ -17,16 +17,10 @@ spec:
     resources: {}
     terminationMessagePath: /dev/termination-log
     terminationMessagePolicy: File
-    volumeMounts:
-    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-      name: cronjob-token-jq5vx
-      readOnly: true
   dnsPolicy: ClusterFirst
   enableServiceLinks: true
   imagePullSecrets:
   - name: docker-hub-secret
-  nodeName: aks-nodepool1-41024926-vmss000001
-  preemptionPolicy: PreemptLowerPriority
   priority: 0
   restartPolicy: Always
   schedulerName: default-scheduler
@@ -34,17 +28,3 @@ spec:
   serviceAccount: cronjob
   serviceAccountName: cronjob
   terminationGracePeriodSeconds: 30
-  tolerations:
-  - effect: NoExecute
-    key: node.kubernetes.io/not-ready
-    operator: Exists
-    tolerationSeconds: 300
-  - effect: NoExecute
-    key: node.kubernetes.io/unreachable
-    operator: Exists
-    tolerationSeconds: 300
-  volumes:
-  - name: cronjob-token-jq5vx
-    secret:
-      defaultMode: 420
-      secretName: cronjob-token-jq5vx
