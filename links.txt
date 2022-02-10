@@ -18,3 +18,5 @@ kubectl -n rook-ceph patch secrets rook-ceph-mon --type merge -p '{"metadata":{"
 
 
 kubectl patch storageclass rook-cephfs -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+
+kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode && echo
