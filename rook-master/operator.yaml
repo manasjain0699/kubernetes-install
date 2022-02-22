@@ -15,10 +15,6 @@ data:
   CSI_CEPHFS_FSGROUPPOLICY: "None"
   ROOK_CSI_ALLOW_UNSUPPORTED_VERSION: "false"
   CSI_PLUGIN_ENABLE_SELINUX_HOST_MOUNT: "false"
-  CSI_PROVISIONER_NODE_AFFINITY: "node-role.kubernetes.io/storage-node=ceph"
-  CSI_PROVISIONER_TOLERATIONS: |
-     - effect: NoSchedule
-       key: node.kubernetes.io/storage-node 
   ROOK_OBC_WATCH_OPERATOR_NAMESPACE: "true"
   ROOK_ENABLE_DISCOVERY_DAEMON: "false"
   ROOK_CEPH_COMMANDS_TIMEOUT_SECONDS: "15"
@@ -70,12 +66,6 @@ spec:
           env:
             - name: ROOK_CURRENT_NAMESPACE_ONLY
               value: "false"
-            - name: DISCOVER_TOLERATIONS
-              value: |
-                 - effect: NoSchedule
-                   key: node.kubernetes.io/storage-node
-            - name: DISCOVER_AGENT_NODE_AFFINITY
-              value: "node-role.kubernetes.io/storage-node=ceph; storage=rook, ceph"
             - name: ROOK_DISCOVER_DEVICES_INTERVAL
               value: "60m"
             - name: ROOK_HOSTPATH_REQUIRES_PRIVILEGED
@@ -102,18 +92,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-      affinity:
-       nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: node-role.kubernetes.io/storage-node
-              operator: In
-              values:
-              - "ceph"
-      tolerations:
-      - key: node.kubernetes.io/storage-node
-        effect: NoSchedule
       volumes:
         - name: rook-config
           emptyDir: {}

@@ -34,55 +34,6 @@ spec:
       dataSource: zero
       iteration: 1
     allowUninstallWithVolumes: false
-  placement:
-    all:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: node-role.kubernetes.io/storage-node
-              operator: In
-              values:
-              - "ceph"
-      tolerations:
-      - key: node.kubernetes.io/storage-node
-        effect: NoSchedule 
-    mon:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: node-role.kubernetes.io/storage-node
-              operator: In
-              values:
-              - "ceph"
-      tolerations:
-      - key: node.kubernetes.io/storage-node
-        effect: NoSchedule
-    osd:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: node-role.kubernetes.io/storage-node
-              operator: In
-              values:
-              - "ceph"
-      tolerations:
-      - key: node.kubernetes.io/storage-node
-        effect: NoSchedule
-    mgr:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: node-role.kubernetes.io/storage-node
-              operator: In
-              values:
-              - "ceph"
-      tolerations:
-      - key: node.kubernetes.io/storage-node
-        effect: NoSchedule
   annotations:
   labels:
   resources:
