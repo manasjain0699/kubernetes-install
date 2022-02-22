@@ -5,6 +5,7 @@ helm install seldon-core seldon-core-operator --repo https://storage.googleapis.
 kubectl create configmap -n seldon-system model-usage-rules --from-file=yamls/seldon/model-usage.rules.yml --dry-run=server -o yaml | kubectl apply -f -
 helm upgrade seldon-core-analytics seldonio/seldon-core-analytics --version 1.4.0 --namespace seldon-system --install -f yamls/seldon/analytics-values.yml
 
+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
 
 #CRD Delete for Rook
 for CRD in $(kubectl get crd -n rook-ceph | awk '/ceph.rook.io/ {print $1}'); do
