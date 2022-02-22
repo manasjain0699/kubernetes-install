@@ -29,8 +29,8 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: kube-cron-job
-            image: katonic/nb-isolation:optimistic-1.3-with-minio-try
-            args: ["setting-up-isolated-env-optimistically.sh"]
+            image: katonic/nb-isolation:v1
+            args: ["new-user.sh"]
             volumeMounts:
             - name: keycloak-script
               mountPath: /keycloak-script
