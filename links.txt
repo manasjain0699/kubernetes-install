@@ -23,3 +23,5 @@ kubectl patch storageclass rook-cephfs -p '{"metadata": {"annotations":{"storage
 kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode && echo
 
 fio --randrepeat=1 --ioengine=libaio --direct=1 --gtod_reduce=1 --name=fiotest --filename=testfio --bs=4k --iodepth=64 --size=8G --readwrite=randrw --rwmixread=75
+
+BS6PpUKnW^Bkc@$l$QAsY$p#l
