@@ -28,3 +28,5 @@ BS6PpUKnW^Bkc@$l$QAsY$p#l
 
 kubectl get pods --all-namespaces --field-selector 'status.phase==Failed' -o json | kubectl delete -f -
 
+kubectl -n rook-ceph patch cephcluster rook-ceph --type merge -p '{"spec":{"cleanupPolicy":{"confirmation":"yes-really-destroy-data"}}}'
+
