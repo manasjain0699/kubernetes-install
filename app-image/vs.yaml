@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: APP_NAME-vs
+  namespace: apps
+spec:
+  gateways:
+  - kubeflow/kubeflow-gateway
+  hosts:
+  - DOMAIN_NAME
+  http:
+  - match:
+    - uri:
+        prefix: "/apps/APP_NAME/"
+    rewrite:
+      uri: "/"
+    route:
+    - destination:
+        host: APP_NAME.apps.svc.cluster.local
+        port:
+          number: PORT

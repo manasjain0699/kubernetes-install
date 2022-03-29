@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: APP_NAME
+  name: APP_NAME
+  namespace: apps
+spec:
+  selector:
+    matchLabels:
+      app: APP_NAME
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: APP_NAME
+    spec:
+      containers:
+      - args:
+        - --ssl-insecure-skip-verify=true
+        - --set-authorization-header=true
+        - --show-debug-on-error=true
+        - --skip-provider-button=true
+        - --provider=keycloak
+        - --client-id=myapp
+        - --scope=group_scope
+        - --client-secret=c8b01721-ebee-4d33-8072-861f53166a34
+        - --login-url=https://DOMAIN_NAME/auth/realms/katonic/protocol/openid-connect/auth
+        - --redeem-url=https://DOMAIN_NAME/auth/realms/katonic/protocol/openid-connect/token
+        - --profile-url=https://DOMAIN_NAME/auth/realms/katonic/protocol/openid-connect/userinfo
+        - --validate-url=https://DOMAIN_NAME/auth/realms/katonic/protocol/openid-connect/userinfo
+        - --upstream=http://localhost:8050/
+        - --cookie-secure=true
+        - --cookie-expire=168h0m
+        - --cookie-refresh=60m
+        - --cookie-secret=L1BibFNSaTFDRGdYbkwxcDM0dW5Vdz09
+        - --cookie-domain=DOMAIN_NAME
+        - --http-address=0.0.0.0:4180
+        - --redirect-url=https://DOMAIN_NAME/oauth2/callback
+        - --email-domain=*
+        - --oidc-email-claim=sub
+        image: katonic/oauth2-proxy:v1
+        imagePullPolicy: IfNotPresent
+        name: oauth2-con
+        ports:
+        - containerPort: 4180
+
+      - image: APP_IMAGE
+        imagePullPolicy: IfNotPresent
+        name: apps
+        ports:
+        - containerPort: PORT
+          protocol: TCP
+        resources:
+          requests:
+             memory: "1Gi"
+             cpu: "1000m"
+          limits:
+             memory: "2Gi"
+             cpu: "2000m"
+      imagePullSecrets:
+      - name: docker-hub-secret
