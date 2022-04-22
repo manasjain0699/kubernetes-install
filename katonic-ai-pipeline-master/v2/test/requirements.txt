@@ -1,2 +1,0 @@
-# install kfp sdk from local path
--e ../../sdk/python
